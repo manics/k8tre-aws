@@ -1,21 +1,10 @@
-resource "aws_ecr_repository" "squid_proxy" {
-  name                 = "squid-proxy"
-  image_tag_mutability = "IMMUTABLE"
-
-  encryption_configuration {
-    encryption_type = "KMS"
-    kms_key         = module.cluster.kms_arn
-  }
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-}
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 resource "aws_cloudwatch_log_group" "squid_proxy" {
   name = "squid-proxy"
 
-  kms_key_id = aws_kms_key.vpc.arn
+  kms_key_id = var.kms_key
 }
 
 resource "aws_cloudwatch_log_metric_filter" "squid_proxy_denied" {
@@ -47,6 +36,25 @@ resource "aws_cloudwatch_metric_alarm" "squid_tcp_denied" {
   ok_actions                = []
 }
 
+resource "aws_iam_role_policy" "squid_proxy_exec" {
+  name = "execution-role"
+  role = aws_iam_role.squid_proxy_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+        ]
+        Resource = format("arn:aws:logs:%s:%s:log-group:%s:*", data.aws_region.current.name, data.aws_caller_identity.current.account_id, aws_cloudwatch_log_group.squid_proxy.name)
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role" "squid_proxy_exec" {
   name = "squid-proxy-execution-role"
 
@@ -63,40 +71,6 @@ resource "aws_iam_role" "squid_proxy_exec" {
       }
     ]
   })
-
-  inline_policy {
-    name = "execution-role"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect = "Allow"
-          Action = [
-            "ecr:GetAuthorizationToken"
-          ]
-          Resource = "*"
-        },
-        {
-          Effect = "Allow"
-          Action = [
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:GetDownloadUrlForLayer",
-            "ecr:BatchGetImage"
-          ]
-          Resource = aws_ecr_repository.squid_proxy.arn
-        },
-        {
-          Effect = "Allow"
-          Action = [
-            "logs:CreateLogStream",
-            "logs:PutLogEvents",
-          ]
-          Resource = format("arn:aws:logs:%s:%s:log-group:%s:*", data.aws_region.current.name, data.aws_caller_identity.current.account_id, aws_cloudwatch_log_group.squid_proxy.name)
-        }
-      ]
-    })
-  }
 }
 
 resource "aws_iam_role" "squid_proxy_task" {
@@ -147,7 +121,7 @@ resource "aws_ecs_task_definition" "squid_proxy" {
   container_definitions = jsonencode([
     {
       name  = "squid"
-      image = "${aws_ecr_repository.squid_proxy.repository_url}:${var.squid_proxy_version}"
+      image = "${var.squid_proxy_repository}:${var.squid_proxy_version}"
 
       essential = true
       portMappings = [
@@ -177,7 +151,7 @@ resource "aws_ecs_task_definition" "squid_proxy" {
       environment = [
         {
           name  = "ALLOWED_DOMAINS"
-          value = join(",", var.squid_proxy_allowed)
+          value = join(",", var.squid_proxy_allowed_domains)
         }
       ]
     }
@@ -187,7 +161,7 @@ resource "aws_ecs_task_definition" "squid_proxy" {
 resource "aws_security_group" "squid_proxy" {
   name        = "ecs-squid-proxy"
   description = "Security group for squid-proxy-container"
-  vpc_id      = module.vpc.vpc.id
+  vpc_id      = var.vpc_id
 
   tags = {
     Name = "squid-proxy"
@@ -221,15 +195,12 @@ resource "aws_vpc_security_group_egress_rule" "squid_proxy_out" {
 
 resource "aws_ecs_service" "squid_proxy" {
   name            = "squid-proxy"
-  cluster         = module.cluster.ecs_cluster
+  cluster         = var.ecs_cluster
   task_definition = aws_ecs_task_definition.squid_proxy.arn
   desired_count   = 1
 
   network_configuration {
-    subnets = [
-      module.vpc.net-az1.id,
-      module.vpc.net-az2.id
-    ]
+    subnets = var.public_subnets
 
     security_groups = [
       aws_security_group.squid_proxy.id
@@ -258,7 +229,7 @@ resource "aws_service_discovery_service" "squid_proxy" {
   name = "squid-proxy"
 
   dns_config {
-    namespace_id = module.cluster.discovery_id
+    namespace_id = var.ecs_discovery_id
 
     dns_records {
       ttl  = 60
@@ -268,7 +239,7 @@ resource "aws_service_discovery_service" "squid_proxy" {
     routing_policy = "MULTIVALUE"
   }
 
-  health_check_custom_config {
+  health_check_config {
     failure_threshold = 1
   }
 }

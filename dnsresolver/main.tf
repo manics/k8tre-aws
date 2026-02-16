@@ -148,8 +148,8 @@ resource "aws_cloudwatch_metric_alarm" "alarm-resolver" {
   threshold                 = "5000"
   alarm_description         = "High Query Volume"
   insufficient_data_actions = []
-  alarm_actions             = [var.alarm_topic]
-  ok_actions                = [var.alarm_topic]
+  alarm_actions             = var.alarm_topics
+  ok_actions                = var.alarm_topics
 
   dimensions = {
     EndpointId = aws_route53_resolver_endpoint.mass-resolver.id

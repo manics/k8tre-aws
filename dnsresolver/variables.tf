@@ -50,7 +50,7 @@ variable "static" {
   description = "list of lists of records [ [name, type, ip], [name, type, ip] ]"
 }
 
-variable "alarm_topic" {
-  type        = string
-  description = "ARN of CloudWatch alarm"
+variable "alarm_topics" {
+  type        = list(string)
+  description = "ARN of CloudWatch alarms"
 }
