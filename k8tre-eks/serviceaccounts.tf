@@ -2,7 +2,7 @@
 
 locals {
   create_pod_identities            = var.create_pod_identities ? 1 : 0
-  create_external_dns_pod_identity = (var.create_pod_identities && length(var.hosted_zone_id) > 0) ? 1 : 0
+  create_external_dns_pod_identity = (var.create_pod_identities && length(var.hosted_zone_ids) > 0) ? 1 : 0
 }
 
 ######################################################################
@@ -75,7 +75,7 @@ module "external_dns_pod_identity" {
   name = "external-dns"
 
   attach_external_dns_policy    = true
-  external_dns_hosted_zone_arns = ["arn:aws:route53:::hostedzone/${var.hosted_zone_id}"]
+  external_dns_hosted_zone_arns = formatlist("arn:aws:route53:::hostedzone/%s", var.hosted_zone_ids)
 
   associations = {
     cluster1 = {

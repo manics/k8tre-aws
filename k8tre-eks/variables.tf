@@ -113,10 +113,10 @@ variable "create_pod_identities" {
   description = "Create additional EKS pod identities (EBS and EFS CSI and are always created)"
 }
 
-variable "hosted_zone_id" {
-  type        = string
-  default     = ""
-  description = "Route53 hosted zone ID for External DNS, set to empty to disable"
+variable "hosted_zone_ids" {
+  type        = list(string)
+  default     = []
+  description = "Route53 hosted zone IDs for External DNS, set to empty to disable"
 }
 
 variable "argocd_create_role" {

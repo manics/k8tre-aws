@@ -189,7 +189,10 @@ module "k8tre-eks" {
   # autoupdate_addons = false
 
   create_pod_identities = true
-  hosted_zone_id        = module.dnsresolver.private-zone-id
+  hosted_zone_ids = [
+    module.dnsresolver.private-zone-id,
+    module.dnsresolver.public-zone-id
+  ]
 
   github_oidc_rolename = "k8tre-dev-github-oidc"
 }
