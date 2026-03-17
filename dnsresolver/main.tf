@@ -14,13 +14,14 @@ terraform {
 ######################################################################
 
 resource "aws_route53_zone" "public-zone" {
-  name = var.name
+  count = var.create_public_zone ? 1 : 0
+  name  = var.name
 }
 
 resource "aws_route53_record" "public-record" {
-  for_each = var.public-records
+  for_each = var.create_public_zone ? var.public-records : {}
 
-  zone_id = aws_route53_zone.public-zone.zone_id
+  zone_id = aws_route53_zone.public-zone[0].zone_id
   name    = format("%s.%s", split(" ", each.key)[0], var.name)
   type    = split(" ", each.key)[1]
   ttl     = 300

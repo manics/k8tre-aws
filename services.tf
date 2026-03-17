@@ -4,6 +4,12 @@ variable "dns_domain" {
   description = "DNS domain"
 }
 
+variable "create_public_zone" {
+  type        = bool
+  default     = true
+  description = "Create public DNS zone"
+}
+
 
 ######################################################################
 # EFS
@@ -40,4 +46,6 @@ module "dnsresolver" {
 
   # For now allow all since K8TRE is fetching external images and code
   allowed_domains = ["*."]
+
+  create_public_zone = var.create_public_zone
 }
