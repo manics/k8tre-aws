@@ -61,6 +61,12 @@ variable "allowed_domains" {
   default     = []
 }
 
+variable "create_public_zone" {
+  type        = bool
+  default     = true
+  description = "Create a public zone with the same name as the private zone"
+}
+
 variable "public-records" {
   type        = map(list(string))
   description = <<EOF
