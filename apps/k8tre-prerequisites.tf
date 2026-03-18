@@ -20,7 +20,11 @@ resource "helm_release" "cilium" {
     },
     {
       name  = "enableIPv4Masquerade"
-      value = "false"
+      value = "true"
+    },
+    {
+      name  = "ipv4NativeRoutingCIDR"
+      value = data.terraform_remote_state.k8tre.outputs.vpc_cidr
     },
     {
       name  = "gatewayAPI.enabled"
@@ -90,7 +94,7 @@ resource "kubernetes_storage_class" "rwo-default" {
 }
 
 data "aws_efs_file_system" "lookup" {
-  creation_token = var.efs_name
+  creation_token = data.terraform_remote_state.k8tre.outputs.efs_token
 }
 
 # https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/ada97c0de28ddea1b525595ed419292191c8601d/examples/kubernetes/dynamic_provisioning/README.md
