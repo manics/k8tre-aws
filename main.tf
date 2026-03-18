@@ -138,22 +138,6 @@ module "vpc" {
   private_subnet_tags = {}
 }
 
-# This is not used in any Terraform resource, but can be referenced in
-# non-terraform resources e.g. load-balancers
-resource "aws_ec2_managed_prefix_list" "service-access-cidrs" {
-  name           = "${var.name}-service-access-cidrs"
-  address_family = "IPv4"
-  max_entries    = 20
-
-  dynamic "entry" {
-    for_each = local.allow_ips
-    content {
-      cidr = entry.value
-      # description =
-    }
-  }
-}
-
 # Security group that allows clusters to access each other
 resource "aws_security_group" "internal_cluster_access" {
   name_prefix = "internal_cluster_endpoint"
@@ -168,6 +152,23 @@ resource "aws_security_group" "internal_cluster_access" {
     self      = true
   }
 }
+
+# This is not used in any Terraform resource, but can be referenced in
+# non-terraform resources e.g. load-balancers
+resource "aws_ec2_managed_prefix_list" "service_access_cidrs" {
+  name           = "${var.name}-service-access-cidrs"
+  address_family = "IPv4"
+  max_entries    = 20
+
+  dynamic "entry" {
+    for_each = local.allow_ips
+    content {
+      cidr = entry.value
+      # description =
+    }
+  }
+}
+
 
 ######################################################################
 # Main K8TRE Kubernetes
@@ -289,7 +290,7 @@ output "efs_token" {
 
 output "service_access_prefix_list" {
   description = "ID of the prefix list that can access services running on K8s"
-  value       = aws_ec2_managed_prefix_list.service-access-cidrs.id
+  value       = aws_ec2_managed_prefix_list.service_access_cidrs.id
 }
 
 output "vpc_cidr" {
