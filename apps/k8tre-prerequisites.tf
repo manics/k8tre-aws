@@ -27,7 +27,8 @@ resource "kubernetes_storage_class" "rwx-default" {
   metadata {
     name = "rwx-default"
     annotations = {
-      "description" = "ReadWriteMany - Multi-pod shared read-write access"
+      "description"                                 = "ReadWriteMany - Multi-pod shared read-write access"
+      "storageclass.kubernetes.io/is-default-class" = "true"
     }
   }
   storage_provisioner = "efs.csi.aws.com"
