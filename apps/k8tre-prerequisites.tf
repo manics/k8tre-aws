@@ -50,7 +50,11 @@ resource "helm_release" "cilium" {
     },
     {
       name  = "enableIPv4Masquerade"
-      value = "false"
+      value = "true"
+    },
+    {
+      name  = "ipv4NativeRoutingCIDR"
+      value = data.terraform_remote_state.k8tre.outputs.vpc_cidr
     },
     {
       name  = "gatewayAPI.enabled"
