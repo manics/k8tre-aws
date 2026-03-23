@@ -46,8 +46,8 @@ variable "additional_admin_principals" {
 
 variable "efs_token" {
   type        = string
-  description = "EFS name creation token"
-  default     = "k8tre-efs"
+  description = "EFS name creation token, if empty default to var.name"
+  default     = ""
 }
 
 
@@ -267,7 +267,7 @@ output "name" {
 
 output "efs_token" {
   description = "EFS name creation token"
-  value       = var.efs_token
+  value       = local.efs_token
 }
 
 output "service_access_prefix_list" {
