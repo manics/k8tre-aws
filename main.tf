@@ -50,6 +50,11 @@ variable "efs_token" {
   default     = ""
 }
 
+variable "enable_github_oidc" {
+  type        = bool
+  description = "Create GitHub OIDC role"
+  default     = false
+}
 
 terraform {
   required_providers {
@@ -205,7 +210,7 @@ module "k8tre-eks" {
     module.dnsresolver.public-zone-id
   )
 
-  github_oidc_rolename = "${var.name}-github-oidc"
+  github_oidc_rolename = var.enable_github_oidc ? "${var.name}-github-oidc" : null
 
   additional_admin_principals = var.additional_admin_principals
 }
