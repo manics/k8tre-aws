@@ -10,13 +10,14 @@ terraform {
 }
 
 data "aws_subnet" "subnets" {
-  for_each = toset(var.subnets)
-  id       = each.value
+  count = length(var.subnets)
+
+  id = var.subnets[count.index]
 }
 
 # Allow NFS traffic 2049/tcp
 resource "aws_security_group" "efs_sg" {
-  name        = "efs-access-sg"
+  name        = "${var.name}-efs-sg"
   description = "Allow NFS traffic for EFS"
   vpc_id      = var.vpc_id
 
@@ -24,7 +25,7 @@ resource "aws_security_group" "efs_sg" {
     from_port   = 2049
     to_port     = 2049
     protocol    = "tcp"
-    cidr_blocks = [for s in data.aws_subnet.subnets : s.cidr_block]
+    cidr_blocks = data.aws_subnet.subnets[*].cidr_block
   }
 }
 
@@ -39,9 +40,10 @@ resource "aws_efs_file_system" "efs" {
 
 # Mount targets, one per subnet
 resource "aws_efs_mount_target" "mount" {
-  for_each        = toset(var.subnets)
+  count = length(var.subnets)
+
   file_system_id  = aws_efs_file_system.efs.id
-  subnet_id       = each.value
+  subnet_id       = var.subnets[count.index]
   security_groups = [aws_security_group.efs_sg.id]
 }
 
