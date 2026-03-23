@@ -31,8 +31,8 @@ variable "k8tre_cluster_label_overrides" {
 
 variable "install_k8tre" {
   type        = bool
-  default     = true
-  description = "Install K8TRE root app-of-apps"
+  default     = false
+  description = "Install K8TRE root app-of-apps. Set this to false until ArgoCD is deployed, then change to true and re-run."
 }
 
 variable "k8tre_github_repo" {

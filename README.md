@@ -66,8 +66,11 @@ Edit [`apps/variables.tf`](apps/variables.tf):
 - Modify `terraform.backend.s3` `bucket` to match the one in `bootstrap/backend.tf`.
 - Change the `data.terraform_remote_state.k8tre` section to match the `backend.s3` section in `main.tf`.
   This allows the ArgoCD terraform to automatically lookup up the EKS details without needing to specify everything manually.
-- By default this will also install the K8TRE ArgoCD root-app-of-apps.
-  Set `install_k8tre = false` to disable this.
+
+### Install K8TRE
+
+- Once ArgoCD is installed set `install_k8tre = true`, then rerun, to install the K8TRE ArgoCD root-app-of-apps.
+
 
 ## Things to note
 

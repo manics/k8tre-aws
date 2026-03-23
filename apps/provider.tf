@@ -32,6 +32,15 @@ terraform {
   }
 }
 
+provider "aws" {
+  region = "eu-west-2"
+  default_tags {
+    tags = {
+      "owner" : "trevolution"
+    }
+  }
+}
+
 
 provider "kubernetes" {
   alias                  = "k8tre-dev"

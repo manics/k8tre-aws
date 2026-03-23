@@ -1,6 +1,36 @@
+# K8S Gateway CRDs: Cilium Helm chart detects whether Gateway CRDs are present
+
+data "http" "gateway_standard_crds" {
+  url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml"
+}
+
+# Need to strip out status field
+# https://github.com/hashicorp/terraform-provider-kubernetes/issues/2739
+# https://github.com/hashicorp/terraform-provider-kubernetes/issues/1428#issuecomment-3053948214
+
+locals {
+  gateway_crds = provider::kubernetes::manifest_decode_multi(data.http.gateway_standard_crds.response_body)
+  gateway_standard_crds_removed_status = [
+    for manifest in local.gateway_crds : { for k, v in manifest : k => v if k != "status" }
+  ]
+}
+
+resource "kubernetes_manifest" "gateway_crds" {
+  for_each = {
+    for manifest in local.gateway_standard_crds_removed_status :
+    "${manifest.kind}--${manifest.metadata.name}" => manifest
+  }
+
+  manifest = each.value
+
+  provider = kubernetes.k8tre-dev
+}
 
 
 resource "helm_release" "cilium" {
+  # Helm chart changes what's installed based on whether the Gateway CRDs are found
+  depends_on = [kubernetes_manifest.gateway_crds]
+
   name       = "cilium"
   repository = "https://helm.cilium.io/"
   chart      = "cilium"
