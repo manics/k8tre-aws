@@ -44,8 +44,7 @@ module "eks" {
     "arn:aws:iam::${local.aws_account_id}:root",
   ]
 
-  # TODO Is this needed?
-  enable_irsa = true
+  enable_irsa = false
 
   # https://docs.aws.amazon.com/eks/latest/userguide/workloads-add-ons-available-eks.html
   addons = merge(

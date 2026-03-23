@@ -12,7 +12,7 @@ locals {
 module "eks_pod_identity_load_balancer" {
   source                          = "terraform-aws-modules/eks-pod-identity/aws"
   version                         = "2.7.0"
-  name                            = "${var.cluster_name}-aws-lb-controller"
+  name                            = "${module.eks.cluster_name}-aws-lb-controller"
   attach_aws_lb_controller_policy = true
 
   # Associate identity with the ServiceAccount that will be created by the
@@ -24,7 +24,7 @@ module "eks_pod_identity_load_balancer" {
 
   associations = {
     cluster1 = {
-      cluster_name = var.cluster_name
+      cluster_name = module.eks.cluster_name
     }
   }
 }
@@ -50,7 +50,7 @@ module "cluster_autoscaler_pod_identity" {
   count                            = local.create_pod_identities
   name                             = "cluster-autoscaler"
   attach_cluster_autoscaler_policy = true
-  cluster_autoscaler_cluster_names = [var.cluster_name]
+  cluster_autoscaler_cluster_names = [module.eks.cluster_name]
 
   # Associate identity with the ServiceAccount that will be created by the
   # cluster-autoscaler Helm chart
@@ -61,7 +61,7 @@ module "cluster_autoscaler_pod_identity" {
 
   associations = {
     cluster1 = {
-      cluster_name = var.cluster_name
+      cluster_name = module.eks.cluster_name
     }
   }
 }
@@ -79,7 +79,7 @@ module "external_dns_pod_identity" {
 
   associations = {
     cluster1 = {
-      cluster_name    = var.cluster_name
+      cluster_name    = module.eks.cluster_name
       namespace       = "externaldns"
       service_account = "externaldns-sa"
     }
@@ -104,7 +104,7 @@ module "external_secrets_pod_identity" {
 
   associations = {
     cluster1 = {
-      cluster_name    = var.cluster_name
+      cluster_name    = module.eks.cluster_name
       namespace       = "external-secrets"
       service_account = "external-secrets-sa"
     }
@@ -140,7 +140,7 @@ module "ack_ec2_pod_identity" {
 
   associations = {
     cluster1 = {
-      cluster_name = var.cluster_name
+      cluster_name = module.eks.cluster_name
     }
   }
 

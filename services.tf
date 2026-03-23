@@ -15,7 +15,7 @@ variable "create_public_zone" {
 # EFS
 
 locals {
-  efs_token = length(var.efs_token) > 0 ? var.efs_token : var.name
+  efs_token = var.efs_token == null ? var.name : var.efs_token
 }
 
 module "efs" {

@@ -1,4 +1,5 @@
 # K8S Gateway CRDs: Cilium Helm chart detects whether Gateway CRDs are present
+# so CRDs must be installed first
 
 data "http" "gateway_standard_crds" {
   url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml"
@@ -28,7 +29,6 @@ resource "kubernetes_manifest" "gateway_crds" {
 
 
 resource "helm_release" "cilium" {
-  # Helm chart changes what's installed based on whether the Gateway CRDs are found
   depends_on = [kubernetes_manifest.gateway_crds]
 
   name       = "cilium"
@@ -88,6 +88,7 @@ resource "kubernetes_storage_class" "rwo-default" {
     name = "rwo-default"
     annotations = {
       "description" = "ReadWriteOnce - Single pod read-write access"
+      # "storageclass.kubernetes.io/is-default-class" = "true"
     }
   }
   storage_provisioner = "kubernetes.io/aws-ebs"
@@ -111,6 +112,7 @@ resource "kubernetes_storage_class" "rwx-default" {
     name = "rwx-default"
     annotations = {
       "description" = "ReadWriteMany - Multi-pod shared read-write access"
+      # "storageclass.kubernetes.io/is-default-class" = "true"
     }
   }
   storage_provisioner = "efs.csi.aws.com"

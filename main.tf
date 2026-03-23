@@ -26,9 +26,9 @@ variable "public_subnets" {
 
 variable "private_subnets" {
   type        = list(string)
-  description = "Private subnet CIDRs to create"
+  description = "Private subnet CIDRs to create. These IPs are used by EKS pods so make it large!"
   default = [
-    "10.0.3.0/24", "10.0.4.0/24",
+    "10.0.64.0/18", "10.0.128.0/18",
   ]
 }
 
@@ -46,8 +46,8 @@ variable "additional_admin_principals" {
 
 variable "efs_token" {
   type        = string
-  description = "EFS name creation token, if empty default to var.name"
-  default     = ""
+  description = "EFS name creation token, if null default to var.name"
+  default     = null
 }
 
 variable "enable_github_oidc" {
@@ -138,6 +138,22 @@ module "vpc" {
   private_subnet_tags = {}
 }
 
+# This is not used in any Terraform resource, but can be referenced in
+# non-terraform resources e.g. load-balancers
+resource "aws_ec2_managed_prefix_list" "service-access-cidrs" {
+  name           = "${var.name}-service-access-cidrs"
+  address_family = "IPv4"
+  max_entries    = 20
+
+  dynamic "entry" {
+    for_each = local.allow_ips
+    content {
+      cidr = entry.value
+      # description =
+    }
+  }
+}
+
 # Security group that allows clusters to access each other
 resource "aws_security_group" "internal_cluster_access" {
   name_prefix = "internal_cluster_endpoint"
@@ -180,8 +196,6 @@ module "k8tre-eks" {
 
   # CIDRs that have access to the K8S API, e.g. `0.0.0.0/0`
   k8s_api_cidrs = local.allow_ips
-  # CIDRs that have access to services running on K8S
-  service_access_cidrs = local.allow_ips
 
   additional_security_groups = [aws_security_group.internal_cluster_access.id]
 
@@ -232,8 +246,6 @@ module "k8tre-argocd-eks" {
 
   # CIDRs that have access to the K8S API, e.g. `0.0.0.0/0`
   k8s_api_cidrs = local.allow_ips
-  # CIDRs that have access to services running on K8S
-  service_access_cidrs = local.allow_ips
 
   additional_security_groups = [aws_security_group.internal_cluster_access.id]
 
@@ -277,7 +289,7 @@ output "efs_token" {
 
 output "service_access_prefix_list" {
   description = "ID of the prefix list that can access services running on K8s"
-  value       = module.k8tre-eks.service_access_cidrs_prefix_list
+  value       = aws_ec2_managed_prefix_list.service-access-cidrs.id
 }
 
 output "vpc_cidr" {
