@@ -53,24 +53,6 @@ resource "helm_release" "cilium" {
 }
 
 
-resource "kubernetes_storage_class" "ebs-gp3" {
-  metadata {
-    name = "gp3"
-    annotations = {
-      "storageclass.kubernetes.io/is-default-class" = "true"
-    }
-  }
-  storage_provisioner = "kubernetes.io/aws-ebs"
-  reclaim_policy      = "Delete"
-  parameters = {
-    type = "gp3"
-  }
-  volume_binding_mode    = "WaitForFirstConsumer"
-  allow_volume_expansion = true
-
-  provider = kubernetes.k8tre-dev
-}
-
 resource "kubernetes_storage_class" "rwo-default" {
   metadata {
     name = "rwo-default"
@@ -90,7 +72,7 @@ resource "kubernetes_storage_class" "rwo-default" {
 }
 
 data "aws_efs_file_system" "lookup" {
-  creation_token = var.efs_name
+  creation_token = data.terraform_remote_state.k8tre.outputs.efs_token
 }
 
 # https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/ada97c0de28ddea1b525595ed419292191c8601d/examples/kubernetes/dynamic_provisioning/README.md
