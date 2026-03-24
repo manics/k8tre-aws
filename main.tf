@@ -218,6 +218,8 @@ module "k8tre-eks" {
   # autoupdate_ami = false
   # autoupdate_addons = false
 
+  install_conflicting_cilium_addons = false
+
   create_pod_identities = true
   hosted_zone_ids = concat(
     [module.dnsresolver.private-zone-id],

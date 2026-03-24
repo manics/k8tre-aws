@@ -56,9 +56,6 @@ module "eks" {
         before_compute = true
         most_recent    = var.autoupdate_addons
       }
-      kube-proxy = {
-        most_recent = var.autoupdate_addons
-      }
       vpc-cni = {
         before_compute = true
         most_recent    = var.autoupdate_addons
@@ -79,6 +76,12 @@ module "eks" {
         }]
       }
     },
+    # When using Cilium replaces it'll replace kube-proxy
+    var.install_conflicting_cilium_addons ? {
+      kube-proxy = {
+        most_recent = var.autoupdate_addons
+      }
+    } : {},
     var.additional_eks_addons
   )
 

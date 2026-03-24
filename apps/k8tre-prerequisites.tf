@@ -57,6 +57,10 @@ resource "helm_release" "cilium" {
       value = "true"
     },
     {
+      name  = "gatewayAPI.hostNetwork.enabled"
+      value = "false"
+    },
+    {
       name  = "kubeProxyReplacement"
       value = "true"
     },

@@ -95,6 +95,12 @@ variable "autoupdate_addons" {
   description = "Whether to autoupdate the versions of EKS addons when Terraform is run"
 }
 
+variable "install_conflicting_cilium_addons" {
+  type        = bool
+  default     = true
+  description = "If installing Cilium later set to false, otherwise set to true"
+}
+
 variable "additional_eks_addons" {
   type        = map(any)
   default     = {}
